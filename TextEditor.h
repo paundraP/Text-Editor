@@ -1,10 +1,19 @@
 #include "Action.h"
 #include "Stack.h"
-#include <string>
+
+class CharNode {
+public:
+  char data;
+  CharNode *next;
+
+  CharNode(char c) : data(c), next(nullptr) {}
+};
 
 class TextEditor {
 private:
-  std::string text;
+  CharNode *head;
+  CharNode *tail;
+  int length = 0;
   Stack<Action> undoStack;
   Stack<Action> redoStack;
 
