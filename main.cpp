@@ -2,11 +2,8 @@
 #include "TextEditor.h"
 using namespace std;
 
-int main() { 
+int main() {
     cout << "hello world" << endl; 
-    TextEditor x;
-    x.insertChar('S');
-    x.insertChar('k');
-    while (x->next != NULL);
+    cout << "pujo ganteng" << endl;
     return 0;
 }
