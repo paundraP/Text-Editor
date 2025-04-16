@@ -77,7 +77,7 @@ void TextEditor::deleteChar() {
     }
     else { // Jika teks lebih dari satu karakter
       CharNode *tmp = head; // Menyimpan node sebelum tail
-      while (tmp->next != tail) { // Traverse ke node sebelum tail
+      while (tmp->next != tail) { // Traverse ke node sebelum node tail
         tmp = tmp->next;
       }
       targetChar = tail->data; // Menyimpan karakter yang ada pada tail
