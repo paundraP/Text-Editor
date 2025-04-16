@@ -10,6 +10,9 @@ public:
   CharNode(char c) : data(c), next(nullptr) {}
 };
 
+
+
+
 class TextEditor {
 private:
   CharNode *head;
