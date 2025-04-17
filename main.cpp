@@ -38,14 +38,14 @@ int main() {
         } else if (c == '>') {
             editor.redo();
         } else if (c == '$') {
-            std::ofstream out("output.txt");
+            std::ofstream out("output.md");
             CharNode* curr = editor.getHead();
             while (curr) {
                 out << curr->data;
                 curr = curr->next;
             }
             out.close();
-            std::cout << "file saved name output.txt" << std::endl;
+            std::cout << "file saved name output.md" << std::endl;
             break;
         } else {
             editor.insertChar(c);
