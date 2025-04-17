@@ -32,6 +32,7 @@ public:
   // helper func
   void insertAt(char c, int pos);
   void deleteAt(int pos);
+  CharNode *getHead();
 };
 
 void TextEditor::insertChar(char c) {
@@ -105,10 +106,10 @@ void TextEditor::undo() {
 
   Action action = undoStack.pop();
   if(action.type == INSERT) {
-    deleteAt(action.position);
+    insertAt(action.character, action.position);
     redoStack.push(Action(DELETE, action.character, action.position));
   } else if (action.type == DELETE) {
-    insertAt(action.character, action.position);
+    deleteAt(action.position);
     redoStack.push(Action(INSERT, action.character, action.position));
   }
 }
@@ -117,14 +118,24 @@ void TextEditor::redo() {
   if (redoStack.isEmpty()) return;
 
   Action action = redoStack.pop();
-  if (action.type == INSERT) {
-    insertAt(action.character, action.position);
-    undoStack.push(action);
-  } else if (action.type == DELETE) {
+  if (action.type == DELETE) {
     deleteAt(action.position);
+    undoStack.push(action);
+  } else if (action.type == INSERT) {
+    insertAt(action.character, action.position);
     undoStack.push(action);
   }
 }
+
+void TextEditor::printText() {
+  CharNode* current = head;
+  while (current) {
+      std::cout << current->data;
+      current = current->next;
+  }
+  std::cout << std::endl;
+}
+
 
 void TextEditor::insertAt(char c, int pos) {
   if (pos < 0 || pos > length) return;
@@ -171,4 +182,8 @@ void TextEditor::deleteAt(int pos) {
   }
   delete toDelete;
   length--;
+}
+
+CharNode *TextEditor::getHead() {
+  return head;
 }
