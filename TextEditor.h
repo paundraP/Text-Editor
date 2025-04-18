@@ -41,6 +41,7 @@ public:
   void insertAt(char c, int pos);
   void deleteAt(int pos);
   CharNode *getHead();
+  std::string getText();
 };
 
 void TextEditor::insertChar(char c) {
@@ -110,13 +111,17 @@ void TextEditor::deleteChar() {
 }
 
 void TextEditor::undo() {
+  // cek kalau belum ada character yang masuk di undo stack langsung return atau tidak melakukan operasi apapun
   if (undoStack.isEmpty()) return;
 
+  // kalau ada, pop Action yang ada di undo stack dan simpan sementara di variabel action
   Action action = undoStack.pop();
+
+  // cek kalau actionnya itu insert, maka dimasukin lagi ke editor
   if(action.type == INSERT) {
     insertAt(action.character, action.position);
     redoStack.push(Action(DELETE, action.character, action.position));
-  } else if (action.type == DELETE) {
+  } else if (action.type == DELETE) { // kalau type nya delete, jadi dihapus lagi characternya dari editor
     deleteAt(action.position);
     redoStack.push(Action(INSERT, action.character, action.position));
   }
@@ -125,11 +130,14 @@ void TextEditor::undo() {
 void TextEditor::redo() {
   if (redoStack.isEmpty()) return;
 
+  // pop Action di redo stack dan disimpan sementara di variabel action
   Action action = redoStack.pop();
+
+  // cek kalau waktu dimasukin pertama kali itu action type nya delete, maka dia bakal di delete di editor
   if (action.type == DELETE) {
     deleteAt(action.position);
     undoStack.push(action);
-  } else if (action.type == INSERT) {
+  } else if (action.type == INSERT) { // kebalikan dari delete
     insertAt(action.character, action.position);
     undoStack.push(action);
   }
@@ -144,7 +152,7 @@ void TextEditor::printText() {
   std::cout << std::endl;
 }
 
-
+// helper function buat masukin character di spesific position, bisa di tengah tengah
 void TextEditor::insertAt(char c, int pos) {
   if (pos < 0 || pos > length) return;
 
@@ -194,4 +202,14 @@ void TextEditor::deleteAt(int pos) {
 
 CharNode *TextEditor::getHead() {
   return head;
+}
+
+std::string TextEditor::getText() {
+  std::string text = "";
+  CharNode* curr = head;
+  while (curr) {
+      text += curr->data;
+      curr = curr->next;
+  }
+  return text;
 }
