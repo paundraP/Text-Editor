@@ -41,6 +41,7 @@ public:
   void insertAt(char c, int pos);
   void deleteAt(int pos);
   CharNode *getHead();
+  int getLength();
   std::string getText();
 };
 
@@ -202,6 +203,10 @@ void TextEditor::deleteAt(int pos) {
 
 CharNode *TextEditor::getHead() {
   return head;
+}
+
+int TextEditor::getLength() {
+  return length;
 }
 
 std::string TextEditor::getText() {
