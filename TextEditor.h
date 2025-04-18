@@ -23,6 +23,14 @@ private:
 
 public:
   TextEditor() : head(nullptr), tail(nullptr), length(0) {}
+  ~TextEditor() {
+    CharNode *curr = head;
+    while(curr) {
+      CharNode *next = curr->next;
+      delete curr;
+      curr = next;
+    }
+  }
   void insertChar(char c);
   void deleteChar();
   void undo();
