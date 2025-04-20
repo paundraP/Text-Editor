@@ -1,9 +1,10 @@
-#include <iostream>
-#include <termios.h>
-#include <unistd.h>
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
-#include <algorithm>
+#include <iostream>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
 #include "TextEditor.h"
 
 // buat raw mode
@@ -33,18 +34,24 @@ void saveFile(TextEditor &editor) {
     out.close();
 }
 
+int getTerminalRows() {
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    return w.ws_row;
+}
+
 int main() {
     TextEditor editor;
     enableRawMode();
     char c, cmd, choice;
     bool isSaved = false;
 
-    std::cout << "press i to start typing" << std::endl;
-    std::cin >> cmd;
+    enableRawMode();
+    std::cout << "press [i] to start typing" << std::endl;
+    read(STDIN_FILENO, &cmd, 1);
     int cursorPos = 0; // tracking cursor
 
     if (cmd == 'i') {
-        enableRawMode();
         while (read(STDIN_FILENO, &c, 1) == 1) {
             if (c == 27) {
                 char seq[2];
@@ -66,7 +73,11 @@ int main() {
                 } else {
                     disableRawMode();
                     if (!isSaved) {
-                        std::cout << "\nYour file is unsaved yet, do you want to save it? (y/n): ";
+                        // ngambil rows
+                        int rows = getTerminalRows();
+                        std::cout << "\033[" << rows << ";1H"; // memindahkan ke paling bawah screen
+                        std::cout << "Your file is unsaved. Save before exiting? (y/n): ";
+                        std::cout.flush();
                         std::cin >> choice;
                         if (choice == 'y') {
                             saveFile(editor);
@@ -94,17 +105,30 @@ int main() {
                 isSaved = false;
             }
 
-            std::string content = editor.getText();
-
             system("clear");
-            std::cout << "Input here:\n" << content << std::endl;
-            std::cout << "\n[<] Undo | [>] Redo | [$] Save | [Backspace] Delete | [ESC] Exit\n";
+
+            // display character yang terecord di linked list
+            std::string content = editor.getText();
+            std::cout << content << std::endl;
+
+
+            int terminalRows = getTerminalRows();
+
+            // mindahin ke paling bawah dari display terminal window (like nano)
+            std::cout << "\033[" << (terminalRows - 1) << ";1H";
+            std::cout << "[<] Undo | [>] Redo | [$] Save | [Backspace] Delete | [ESC] Exit";
+
+            // sama kaya atasnya, kalau ke save akan muncul tulisan tersave
+            std::cout << "\033[" << terminalRows << ";1H";
             if (isSaved) {
-                std::cout << "file saved as output.md" << std::endl;
+                std::cout << "File saved as output.md";
+            } else {
+                std::cout << " "; // kalau user ngetik lagi akan ke clear.
             }
 
+
             // set cursor di setelah input here
-            int row = 2;
+            int row = 1;
             int col = 1;
 
             int newlines = 0;
@@ -112,7 +136,7 @@ int main() {
             if (lastNewline != std::string::npos) {
                 newlines = std::count(content.begin(), content.begin() + cursorPos, '\n');
                 row += newlines;
-                col = cursorPos - lastNewline + 1;
+                col = cursorPos - lastNewline;
             } else {
                 col += cursorPos;
             }
