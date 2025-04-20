@@ -44,6 +44,7 @@ int main() {
     int cursorPos = 0; // tracking cursor
 
     if (cmd == 'i') {
+        enableRawMode();
         while (read(STDIN_FILENO, &c, 1) == 1) {
             if (c == 27) {
                 char seq[2];
@@ -76,20 +77,19 @@ int main() {
                     break;
                 }
             } else if (c == 127) {
-                editor.deleteAt(cursorPos);
-                if (cursorPos > 0) cursorPos--;
+                editor.deleteChar(cursorPos);
+                if (cursorPos > 0) cursorPos--;            
             } else if (c == '<') {
-                editor.undo();
                 cursorPos = editor.getLength(); // set cursor ke character terakhir
+                editor.undo();
             } else if (c == '>') {
-                editor.redo();
                 cursorPos = editor.getLength();
+                editor.redo();
             } else if (c == '$') {
                 saveFile(editor);
-                std::cout << "file saved as output.md" << std::endl;
                 isSaved = true;
             } else {
-                editor.insertAt(c, cursorPos);
+                editor.insertChar(c, cursorPos);
                 cursorPos++;
                 isSaved = false;
             }
@@ -99,6 +99,10 @@ int main() {
             system("clear");
             std::cout << "Input here:\n" << content << std::endl;
             std::cout << "\n[<] Undo | [>] Redo | [$] Save | [Backspace] Delete | [ESC] Exit\n";
+            std::cout << "current position: " << cursorPos << std::endl;
+            if (isSaved) {
+                std::cout << "file saved as output.md" << std::endl;
+            }
 
             // set cursor di setelah input here
             int row = 2;

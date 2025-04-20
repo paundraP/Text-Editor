@@ -10,9 +10,6 @@ public:
   CharNode(char c) : data(c), next(nullptr) {}
 };
 
-
-
-
 class TextEditor {
 private:
   CharNode *head;
@@ -31,38 +28,49 @@ public:
       curr = next;
     }
   }
-  void insertChar(char c);
-  void deleteChar();
+  void insertChar(char c, int pos);
+  void deleteChar(int pos);
   void undo();
   void redo();
   void printText();
   
   // helper func
-  void insertAt(char c, int pos);
-  void deleteAt(int pos);
   CharNode *getHead();
   int getLength();
   std::string getText();
 };
 
-void TextEditor::insertChar(char c) {
+void TextEditor::insertChar(char c, int pos) {
+  if (pos < 0 || pos >= length) {
+    return;
+  }
   // Buat node baru
   CharNode* newNode = new CharNode(c);
   
   // Jika teks masih kosong
-  if (head == nullptr) {
-      head = tail = newNode;
-  } else {
-      // Sisipkan di akhir (tail)
-      tail->next = newNode;
+  if (pos == 0) {
+    newNode->next = head; 
+    head = newNode;
+    if (length == 0) {
       tail = newNode;
+    }
+  } else {
+      CharNode *tmp = head;
+      for (int i = 0; i < pos - 1; i++) {
+        tmp = tmp->next;
+      }
+      newNode->next = tmp->next;
+      tmp->next = newNode;
+      if (newNode->next == nullptr) {
+        tail = newNode;
+      }
   }
   
   // Tambahkan action ke undo stack
   Action action;
   action.type = DELETE;  // Untuk undo insert adalah delete
   action.character = c;
-  action.position = length;  // Posisi karakter yang dimasukkan
+  action.position = pos;  // Posisi karakter yang dimasukkan
   
   undoStack.push(action);
   
@@ -75,32 +83,39 @@ void TextEditor::insertChar(char c) {
   length++;
 }
 
-void TextEditor::deleteChar() {
+void TextEditor::deleteChar(int pos) {
+  CharNode* toDelete; // Mendekalarasikan node yang akan dihapus
   char targetChar; // Mendeklarasikan target karakter yang akan dihapus
-    if (head == nullptr) { // Jika teks kosong maka tidak ada yang perlu dihapus
+    if (head == nullptr || pos < 0 || pos >= length) { // Jika teks kosong maka tidak ada yang perlu dihapus
       return;
     }
     
-    if (head == tail) { // Jika teks hanya terdiri dari satu karakter (head) maka hanya perlu menghapus node head dan meng-assign pointer head ke null.
-      targetChar = head->data;
-      delete head;
-      head = tail = nullptr;
+    if (pos == 0) { // Jika teks hanya terdiri dari satu karakter (head) maka hanya perlu menghapus node head dan meng-assign pointer head ke null.
+      toDelete = head;
+      targetChar = toDelete->data;
+      head = head->next;
+      if (head == nullptr) {
+        tail = nullptr;
+      }
     }
     else { // Jika teks lebih dari satu karakter
       CharNode *tmp = head; // Menyimpan node sebelum tail
-      while (tmp->next != tail) { // Traverse ke node sebelum node tail
+      for (int i = 0; i < pos - 1; i++) {
         tmp = tmp->next;
       }
-      targetChar = tail->data; // Menyimpan karakter yang ada pada tail
-      delete tail; // Menghapus tail
-      tail = tmp; // Mengassign pointer tail ke node sebelum tail
-      tail->next = nullptr; // Meng-assign pointer ke node setelah tail baru menjadi null (bukan tail lama)
+      toDelete = tmp->next;
+      targetChar = toDelete->data; // Menyimpan karakter yang ada pada tail
+      tmp->next = toDelete->next;
+      if (toDelete == tail) {
+        tail = tmp;
+      }
     }
-
+    delete toDelete; // Menghapus char
+    
     Action action;
     action.type = INSERT; // Untuk meng-undo penghapusan karakter, maka karakter di insert kembali ke dalam text editor
     action.character = targetChar;
-    action.position = length - 1; // Posisi karakter pada text editor
+    action.position = pos; // Posisi karakter pada text editor
 
     undoStack.push(action);
 
@@ -120,10 +135,10 @@ void TextEditor::undo() {
 
   // cek kalau actionnya itu insert, maka dimasukin lagi ke editor
   if(action.type == INSERT) {
-    insertAt(action.character, action.position);
+    insertChar(action.character, action.position);
     redoStack.push(Action(DELETE, action.character, action.position));
   } else if (action.type == DELETE) { // kalau type nya delete, jadi dihapus lagi characternya dari editor
-    deleteAt(action.position);
+    deleteChar(action.position);
     redoStack.push(Action(INSERT, action.character, action.position));
   }
 }
@@ -136,10 +151,10 @@ void TextEditor::redo() {
 
   // cek kalau waktu dimasukin pertama kali itu action type nya delete, maka dia bakal di delete di editor
   if (action.type == DELETE) {
-    deleteAt(action.position);
+    deleteChar(action.position);
     undoStack.push(action);
   } else if (action.type == INSERT) { // kebalikan dari delete
-    insertAt(action.character, action.position);
+    insertChar(action.character, action.position);
     undoStack.push(action);
   }
 }
@@ -153,54 +168,6 @@ void TextEditor::printText() {
   std::cout << std::endl;
 }
 
-// helper function buat masukin character di spesific position, bisa di tengah tengah
-void TextEditor::insertAt(char c, int pos) {
-  if (pos < 0 || pos > length) return;
-
-  CharNode *newnode = new CharNode(c);
-
-  if (pos == 0) {
-    newnode->next = head;
-    head = newnode;
-    if (length == 0) tail = newnode;
-} else {
-    CharNode* prev = head;
-    for (int i = 0; i < pos - 1; i++) {
-        prev = prev->next;
-    }
-    newnode->next = prev->next;
-    prev->next = newnode;
-    if (newnode->next == nullptr) tail = newnode;
-}
-
-length++;
-}
-
-void TextEditor::deleteAt(int pos) {
-  if (!head || pos < 0 || pos >= length) return;
-
-  CharNode *toDelete = nullptr;
-
-  if (pos == 0) {
-    toDelete = head;
-    head = head->next;
-    if(!head) tail = nullptr;
-  } else {
-    CharNode *prev = head;
-    for (int i = 0; i < pos - 1; i++) {
-      prev = prev->next;
-  }
-
-  toDelete = prev->next;
-  prev->next = toDelete->next;
-  if (prev->next == nullptr) {
-      tail = prev; // kalo yang dihapus itu yang paling belakang, update tail nya
-  }
-  }
-  delete toDelete;
-  length--;
-}
-
 CharNode *TextEditor::getHead() {
   return head;
 }
@@ -210,9 +177,9 @@ int TextEditor::getLength() {
 }
 
 std::string TextEditor::getText() {
-  std::string text = "";
+  std::string text;
   CharNode* curr = head;
-  while (curr) {
+  while (curr != nullptr) {
       text += curr->data;
       curr = curr->next;
   }
