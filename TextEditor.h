@@ -32,16 +32,15 @@ public:
   void deleteChar(int pos);
   void undo();
   void redo();
-  void printText();
+  std::string getText();
   
   // helper func
   CharNode *getHead();
   int getLength();
-  std::string getText();
 };
 
 void TextEditor::insertChar(char c, int pos) {
-  if (pos < 0 || pos >= length) {
+  if (pos < 0 || pos > length) {
     return;
   }
   // Buat node baru
@@ -159,15 +158,6 @@ void TextEditor::redo() {
   }
 }
 
-void TextEditor::printText() {
-  CharNode* current = head;
-  while (current) {
-      std::cout << current->data;
-      current = current->next;
-  }
-  std::cout << std::endl;
-}
-
 CharNode *TextEditor::getHead() {
   return head;
 }
@@ -177,9 +167,9 @@ int TextEditor::getLength() {
 }
 
 std::string TextEditor::getText() {
-  std::string text;
+  std::string text = "";
   CharNode* curr = head;
-  while (curr != nullptr) {
+  while (curr) {
       text += curr->data;
       curr = curr->next;
   }
