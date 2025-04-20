@@ -78,13 +78,13 @@ int main() {
                 }
             } else if (c == 127) {
                 editor.deleteChar(cursorPos);
-                if (cursorPos > 0) cursorPos--;            
+                if (cursorPos > 0) cursorPos--;     
             } else if (c == '<') {
-                cursorPos = editor.getLength(); // set cursor ke character terakhir
                 editor.undo();
-            } else if (c == '>') {
                 cursorPos = editor.getLength();
+            } else if (c == '>') {
                 editor.redo();
+                cursorPos = editor.getLength();
             } else if (c == '$') {
                 saveFile(editor);
                 isSaved = true;
@@ -99,7 +99,6 @@ int main() {
             system("clear");
             std::cout << "Input here:\n" << content << std::endl;
             std::cout << "\n[<] Undo | [>] Redo | [$] Save | [Backspace] Delete | [ESC] Exit\n";
-            std::cout << "current position: " << cursorPos << std::endl;
             if (isSaved) {
                 std::cout << "file saved as output.md" << std::endl;
             }
@@ -113,7 +112,7 @@ int main() {
             if (lastNewline != std::string::npos) {
                 newlines = std::count(content.begin(), content.begin() + cursorPos, '\n');
                 row += newlines;
-                col = cursorPos - lastNewline;
+                col = cursorPos - lastNewline + 1;
             } else {
                 col += cursorPos;
             }

@@ -28,8 +28,8 @@ public:
       curr = next;
     }
   }
-  void insertChar(char c, int pos);
-  void deleteChar(int pos);
+  void insertChar(char c, int pos, bool record = true);
+  void deleteChar(int pos, bool record = true);
   void undo();
   void redo();
   std::string getText();
@@ -39,7 +39,7 @@ public:
   int getLength();
 };
 
-void TextEditor::insertChar(char c, int pos) {
+void TextEditor::insertChar(char c, int pos, bool record) {
   if (pos < 0 || pos > length) {
     return;
   }
@@ -65,24 +65,27 @@ void TextEditor::insertChar(char c, int pos) {
       }
   }
   
-  // Tambahkan action ke undo stack
-  Action action;
-  action.type = DELETE;  // Untuk undo insert adalah delete
-  action.character = c;
-  action.position = pos;  // Posisi karakter yang dimasukkan
-  
-  undoStack.push(action);
-  
-  // Reset redo stack karena ada operasi baru
-  while (!redoStack.isEmpty()) {
-      redoStack.pop();
+  if (record) {
+    // Tambahkan action ke undo stack
+    Action action;
+    action.type = DELETE;  // Untuk undo insert adalah delete
+    action.character = c;
+    action.position = pos;  // Posisi karakter yang dimasukkan
+    
+    undoStack.push(action);
+
+    // Reset redo stack karena ada operasi baru
+    while (!redoStack.isEmpty()) {
+        redoStack.pop();
+    }
   }
+  
   
   // Update panjang teks
   length++;
 }
 
-void TextEditor::deleteChar(int pos) {
+void TextEditor::deleteChar(int pos, bool record) {
   CharNode* toDelete; // Mendekalarasikan node yang akan dihapus
   char targetChar; // Mendeklarasikan target karakter yang akan dihapus
     if (head == nullptr || pos < 0 || pos >= length) { // Jika teks kosong maka tidak ada yang perlu dihapus
@@ -111,15 +114,17 @@ void TextEditor::deleteChar(int pos) {
     }
     delete toDelete; // Menghapus char
     
-    Action action;
-    action.type = INSERT; // Untuk meng-undo penghapusan karakter, maka karakter di insert kembali ke dalam text editor
-    action.character = targetChar;
-    action.position = pos; // Posisi karakter pada text editor
-
-    undoStack.push(action);
-
-    while (!redoStack.isEmpty()) { // Menghapus riwayat redo text editor
-      redoStack.pop();
+    if (record) {
+      Action action;
+      action.type = INSERT; // Untuk meng-undo penghapusan karakter, maka karakter di insert kembali ke dalam text editor
+      action.character = targetChar;
+      action.position = pos; // Posisi karakter pada text editor
+  
+      undoStack.push(action);
+  
+      while (!redoStack.isEmpty()) { // Menghapus riwayat redo text editor
+        redoStack.pop();
+      }
     }
 
     length--; // Mengurangi jumlah karakter pada text editor sebanyak satu
@@ -134,10 +139,10 @@ void TextEditor::undo() {
 
   // cek kalau actionnya itu insert, maka dimasukin lagi ke editor
   if(action.type == INSERT) {
-    insertChar(action.character, action.position);
+    insertChar(action.character, action.position, false);
     redoStack.push(Action(DELETE, action.character, action.position));
   } else if (action.type == DELETE) { // kalau type nya delete, jadi dihapus lagi characternya dari editor
-    deleteChar(action.position);
+    deleteChar(action.position, false);
     redoStack.push(Action(INSERT, action.character, action.position));
   }
 }
@@ -150,10 +155,10 @@ void TextEditor::redo() {
 
   // cek kalau waktu dimasukin pertama kali itu action type nya delete, maka dia bakal di delete di editor
   if (action.type == DELETE) {
-    deleteChar(action.position);
+    deleteChar(action.position, false);
     undoStack.push(action);
   } else if (action.type == INSERT) { // kebalikan dari delete
-    insertChar(action.character, action.position);
+    insertChar(action.character, action.position, false);
     undoStack.push(action);
   }
 }
