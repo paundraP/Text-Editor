@@ -90,10 +90,10 @@ int main() {
             } else if (c == 127) {
                 editor.deleteChar(cursorPos);
                 if (cursorPos > 0) cursorPos--;     
-            } else if (c == '[') {
+            } else if (c == 21) {
                 editor.undo();
                 cursorPos = editor.getLength();
-            } else if (c == ']') {
+            } else if (c == 18) {
                 editor.redo();
                 cursorPos = editor.getLength();
             } else if (c == '$') {
@@ -116,7 +116,7 @@ int main() {
 
             // mindahin ke paling bawah dari display terminal window (like nano)
             std::cout << "\033[" << (terminalRows - 1) << ";1H";
-            std::cout << "[`[`] Undo | [`]`[]] Redo | [$] Save | [Backspace] Delete | [ESC] Exit";
+            std::cout << "[^+U] Undo | [^+R] Redo | [$] Save | [Backspace] Delete | [ESC] Exit";
 
             // sama kaya atasnya, kalau ke save akan muncul tulisan tersave
             std::cout << "\033[" << terminalRows << ";1H";
