@@ -163,14 +163,17 @@ void TextEditor::redo() {
   }
 }
 
+// ambil first node of the text
 CharNode *TextEditor::getHead() {
   return head;
 }
 
+// ambil length karena length variable private
 int TextEditor::getLength() {
   return length;
 }
 
+// buat ngetracking content
 std::string TextEditor::getText() {
   std::string text = "";
   CharNode* curr = head;
